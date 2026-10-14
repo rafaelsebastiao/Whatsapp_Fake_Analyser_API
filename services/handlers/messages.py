@@ -14,6 +14,9 @@ evolution_api_url = Settings().EVOLUTION_API_URL
 
 evolution_api_key = Settings().EVOLUTION_AUTHENTICATION_API_KEY
 
+chatbot_instance_name = Settings().CHATBOT_INSTANCE_NAME
+
+
 # Método que lê o json de mensagens padrão que serão enviadas pelo bot
 def get_default_message():
     with open(greetings_file_path, 'r', encoding='utf-8') as file:
@@ -36,7 +39,7 @@ async def handle_message_upsert(payload: dict, client):
     # print(remote_jid)
 
     await send_text_message(
-        instance_name="fake-analyser-chatbot",
+        instance_name=chatbot_instance_name,
         number=remote_jid,
         text=get_default_message(),
         client=client,
