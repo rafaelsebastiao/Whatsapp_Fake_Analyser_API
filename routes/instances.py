@@ -6,11 +6,15 @@ from services.evolution.instances import find_instances, create_instance, connec
 
 from services.evolution.webhooks import get_webhook, create_webhook
 
+from settings.settings import Settings
+
 router = APIRouter(
     prefix='/instances',
     tags = ['Instances']
 )
 
+# Nome da instância do whatsapp que será criada no evolution api
+chatbot_instance_name = Settings().CHATBOT_INSTANCE_NAME
 
 @router.get('/chatbot/')
 async def connect_chatbot(
@@ -21,9 +25,9 @@ async def connect_chatbot(
     response = await find_instances(client=client)
     instances_list = response.json()
 
-    #Se não houver sessões, deverá ser criado uma
+    #Se não houver instâncias, deverá ser criado uma
     if not len(instances_list):
-        await create_instance(name="fake-analyser-chatbot", client=client)
+        await create_instance(name=chatbot_instance_name, client=client)
 
         #Alterar a lista de instâncias com a instância nova
         response = await find_instances(client=client)
