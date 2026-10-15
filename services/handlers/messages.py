@@ -18,11 +18,12 @@ chatbot_instance_name = Settings().CHATBOT_INSTANCE_NAME
 
 
 # Método que lê o json de mensagens padrão que serão enviadas pelo bot
-def get_default_message():
+def get_default_message(userName:str) -> str:
     with open(greetings_file_path, 'r', encoding='utf-8') as file:
         content = json.load(file)
 
-    return content["text"]
+    message = f'🤖 Olá {userName}, tudo bem?\n{content["text"]}'
+    return message
 
 
 
@@ -34,14 +35,13 @@ async def handle_message_upsert(payload: dict, client):
     # Captura do número de telefone
     remote_jid = data.get("key").get("remoteJid")
 
-    
-    # print(data)
-    # print(remote_jid)
+    # Captura do nome de usuário
+    userName = data.get("pushName")
 
     await send_text_message(
         instance_name=chatbot_instance_name,
         number=remote_jid,
-        text=get_default_message(),
+        text=get_default_message(userName),
         client=client,
     )
 
