@@ -9,4 +9,3 @@ class Settings(BaseSettings):
     EVOLUTION_API_URL:str 
     EVOLUTION_AUTHENTICATION_API_KEY : str
     CHATBOT_INSTANCE_NAME:str
-    DATABASE_URL:str 
