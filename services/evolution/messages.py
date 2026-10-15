@@ -18,8 +18,6 @@ base_path = Path().cwd()
 greetings_file_path = base_path / "templates" / "greetings.json"
 
 
-
-
 async def send_text_message(
     instance_name: str,
     number:str,
