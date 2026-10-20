@@ -29,30 +29,6 @@ def get_last_message_info(bot_history_messages : list) -> dict:
     }
 
 
-async def find_user_messages(
-        instance_name: str,     
-        number:str,
-        client:AsyncClient
-        
-        ):
-    try:
-        response = await client.post(
-            url=f'{evolution_api_url}/chat/findMessages/{instance_name}/',
-            
-
-            headers={'apikey':apikey}
-            )
-    except _exceptions.ConnectError as errc:
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR, 
-            detail=f"Connection error: The Whatsapp's endpoint is inaccessible or down!\n"
-                            
-        )
-
-    verify_status_http(response)
-
-    
-    ...
 
 
 async def find_bot_messages(
