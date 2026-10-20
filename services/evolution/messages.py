@@ -13,9 +13,6 @@ from pathlib import Path
 evolution_api_url = Settings().EVOLUTION_API_URL
 apikey = Settings().EVOLUTION_AUTHENTICATION_API_KEY
 
-base_path = Path().cwd()
-
-greetings_file_path = base_path / "templates" / "greetings.json"
 
 
 async def send_text_message(
@@ -48,4 +45,18 @@ async def send_text_message(
         
     verify_status_http(response)
     return response.json()
+
+
+def get_message_type(data: dict):
+    message_context = data.get("message")
+
+    message_type : str
+
+    if ("conversation" in message_context):
+        message_type="conversation"
+    elif ("imageMessage" in message_context):
+        message_type = "image"
+
+
+    return message_type
 
