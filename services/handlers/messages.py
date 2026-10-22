@@ -10,6 +10,8 @@ from services.timecalc.time import has_passed_24_hours
 
 from settings.settings import Settings
 
+from services.ai.genai import text_analisys
+
 base_path = Path().cwd()
 
 greetings_file_path = base_path / "templates" / "greetings.json"
