@@ -4,7 +4,7 @@ from settings.settings import Settings
 
 gemini_api_key = Settings().GEMINI_API_KEY
 
-client = genai.Client(gemini_api_key)
+client = genai.Client(api_key=gemini_api_key)
 
 def text_analisys(notice: str):
 
