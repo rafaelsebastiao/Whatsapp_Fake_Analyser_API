@@ -1,8 +1,4 @@
-import json
-
-from pathlib import Path
-
-from services.evolution.messages import  send_text_message, get_message_type
+from services.evolution.messages import send_default_text_message, send_analysis_message, get_message_type, send_prohibited_message_type
 
 from services.evolution.chats import find_bot_messages, get_last_message_info
 
@@ -12,50 +8,11 @@ from settings.settings import Settings
 
 from services.ai.genai import text_analisys
 
-base_path = Path().cwd()
 
-greetings_file_path = base_path / "templates" / "greetings.json"
 
-text_analisys_message_path = base_path / "templates" / "text_analysis_message.json"
-
-image_analisys_message_path = base_path / "templates" / "image_analysis_message.json"
-
-evolution_api_url = Settings().EVOLUTION_API_URL
-
-evolution_api_key = Settings().EVOLUTION_AUTHENTICATION_API_KEY
 
 chatbot_instance_name = Settings().CHATBOT_INSTANCE_NAME
 
-
-# Método que lê o json de mensagens padrão que serão enviadas pelo bot
-def get_default_message(userName:str) -> str:
-    with open(greetings_file_path, 'r', encoding='utf-8') as file:
-        content = json.load(file)
-
-    message = f'🤖 Olá {userName}, tudo bem?\n{content["text"]}'
-    return message
-
-
-def get_user_header(user_name:str) -> str:
-    return f'🤖 Olá {user_name}, tudo bem?\n'
-
-def get_image_analysis_message():
-    image_analisys_message:str = ''
-
-    with open(image_analisys_message_path, 'r', encoding='utf-8') as file:
-        content = json.load(file)
-        image_analisys_message = content["text"]
-
-    return image_analisys_message
-
-def get_text_analysis_message():
-    text_analisys_message:str = ''
-    
-    with open(text_analisys_message_path, 'r', encoding='utf-8') as file:
-        content = json.load(file)
-        text_analisys_message = content["text"]
-    
-    return text_analisys_message
     
     
 
@@ -85,102 +42,66 @@ async def handle_message_upsert(payload: dict, client):
     
     # Lista de mensagens enviadas pelo bot para o número do usuário
     bot_history_messages_list = bot_history_messages.get("messages").get("records")
-        
-    if len(bot_history_messages_list):
 
-        # Retorna um dict com o conteúdo e com o timestamp da ultima mensagem {'content': text, 'timestamp': timestamp}
-        last_bot_message_info = get_last_message_info(bot_history_messages_list)
-                                    
-        # # Retorna o conteúdo da última mensagem do bot ao usuário
-        # last_bot_message_content = last_bot_message_info.get("content")
-                                    
-        # Retorna o timestamp da última mensagem do bot ao usuário
-        last_bot_message_timestamp = last_bot_message_info.get("timestamp")
-                        
-        # User Header padrão com o nome do usuário (Olá, fulano...)
-        # user_header = get_user_header(user_name)
-                
+    # Retorna um dict com o conteúdo e com o timestamp da ultima mensagem {'content': text, 'timestamp': timestamp}
+    last_bot_message_info = get_last_message_info(bot_history_messages_list)
+                                        
+    last_bot_message_timestamp = last_bot_message_info.get("timestamp")
+
+    list_is_empty = not bot_history_messages_list
+    
+    passed_24h = has_passed_24_hours(last_bot_message_timestamp)
+
+        
+     
     match user_message_type:
             # Caso a mensagem que o usuário enviou for uma imagem
             case "image":
                 base64_user_message = data.get("message").get("base64")
-                
-                # Se o bot ainda não enviou mensagens para o usuário, será enviado a mensagem padrão
-                if not len(bot_history_messages_list):
-                    await send_text_message(
-                        instance_name=chatbot_instance_name,
-                        number=remote_jid,
-                        text=get_default_message(user_name),
-                        client=client        
-                    )
-
-                    await send_text_message(
-                        instance_name=chatbot_instance_name,
-                        number=remote_jid,
-                        text=get_image_analysis_message(),
-                        client=client        
-                    )
-
-                    #TODO analisar a imagem
-                
-                
-                elif has_passed_24_hours(last_bot_message_timestamp):
-                    await send_text_message(
-                        instance_name=chatbot_instance_name,
-                        number=remote_jid,
-                        text=get_default_message(user_name),
-                        client=client        
-                    )
-                    await send_text_message(
-                        instance_name=chatbot_instance_name,
-                        number=remote_jid,
-                        text=get_image_analysis_message(),
-                        client=client        
-                    )
-
-                    #TODO analisar a imagem
-                else:
-                    await send_text_message(
-                        instance_name=chatbot_instance_name,
-                        number=remote_jid,
-                        text=get_image_analysis_message(),
-                        client=client        
-                    )
+                                
+                # Se o bot ainda não enviou mensagens para o usuário ou se a ultima mensagem é antiga, será enviado a mensagem padrão
+                if list_is_empty or passed_24h:
                     
-                    #TODO analisar a imagem
+                    await send_default_text_message(
+                        number=remote_jid,
+                        user_name=user_name,
+                        client=client
+                    )
+
+
+                await send_analysis_message(
+                    number=remote_jid,
+                    message_type=user_message_type,
+                    client=client
+                )
+
+                #TODO analisar a imagem
                     
             case "conversation":
                 user_text_message = data.get("message").get("conversation")
-    
-                if not len(bot_history_messages_list):
-                    await send_text_message(
-                        instance_name=chatbot_instance_name,
+
+                # Caso a lista esteja vazia ou a ultima mensagem for antiga
+                if list_is_empty or passed_24h:
+                    
+                    await send_default_text_message(
                         number=remote_jid,
-                        text=get_default_message(user_name),
-                        client=client        
+                        user_name=user_name,
+                        client=client
                     )
 
-                elif has_passed_24_hours(last_bot_message_timestamp):
-                    await send_text_message(
-                        instance_name=chatbot_instance_name,
+                # Caso a lista não seja vazia ou a mensagem for antiga
+                if not list_is_empty or passed_24h:
+
+                    await send_analysis_message(
                         number=remote_jid,
-                        text=get_default_message(user_name),
-                        client=client        
+                        message_type=user_message_type,
+                        client=client
                     )
-                    await send_text_message(
-                        instance_name=chatbot_instance_name,
-                        number=remote_jid,
-                        text=get_text_analysis_message(),
-                        client=client        
-                    )
+
 
                     #TODO analisar o texto enviado pelo usuário
-                else:
-                    await send_text_message(
-                        instance_name=chatbot_instance_name,
-                        number=remote_jid,
-                        text=get_text_analysis_message(),
-                        client=client        
-                    )
-
-                    #TODO analisar o texto enviado pelo usuário
+            case _:
+                await send_prohibited_message_type(
+                    number=remote_jid,
+                    client=client
+                )

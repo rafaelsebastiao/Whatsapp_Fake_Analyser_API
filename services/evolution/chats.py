@@ -14,6 +14,8 @@ apikey = Settings().EVOLUTION_AUTHENTICATION_API_KEY
 
 # Método para retornar informações da ultima mensagem enviada pelo bot -> Seu conteúdo e seu timestamp
 def get_last_message_info(bot_history_messages : list) -> dict:
+    if not len(bot_history_messages):
+        return {}
     # Retorna a mensagem ("records") com o último timestamp 
     last_message = max(
         bot_history_messages,
@@ -27,7 +29,6 @@ def get_last_message_info(bot_history_messages : list) -> dict:
         "content" : content,
         "timestamp":timestamp
     }
-
 
 
 
