@@ -10,7 +10,6 @@ from services.ai.genai import text_analisys
 
 
 
-
 chatbot_instance_name = Settings().CHATBOT_INSTANCE_NAME
 
     
