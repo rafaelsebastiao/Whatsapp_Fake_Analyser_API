@@ -207,3 +207,10 @@ def get_prohibited_message_type():
         prohibited_message_type = content["text"]
     
     return prohibited_message_type
+
+
+# Método que lê o texto de um template em templates/<name>.json
+@cache
+def get_template(name: str) -> str:
+    with open(base_path / "templates" / f"{name}.json", 'r', encoding='utf-8') as file:
+        return json.load(file)["text"]
