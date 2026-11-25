@@ -1,18 +1,59 @@
-from services.evolution.messages import send_default_text_message, send_analysis_message, get_message_type, send_prohibited_message_type
+from fastapi import BackgroundTasks
+
+
+from services.evolution.messages import (
+send_default_text_message, 
+send_analysis_message, 
+send_text_message,
+get_message_type, 
+send_prohibited_message_type
+
+)
 
 from services.evolution.chats import find_bot_messages, get_last_message_info
 
 from services.timecalc.time import has_passed_24_hours
+
+from services.cordination.cordination import MemoryCoordinator
+
 
 from settings.settings import Settings
 
 from services.ai.genai import text_analisys
 
 
-
 chatbot_instance_name = Settings().CHATBOT_INSTANCE_NAME
 
-    
+
+
+async def dispatch_message(
+    payload: dict,
+    client,
+    coord: MemoryCoordinator,
+    background_tasks: BackgroundTasks,
+):
+    data = payload.get("data") or {}
+    key = data.get("key") or {}
+    jid = key.get("remoteJid")
+    message_id = key.get("id")
+
+    # ignora mensagens enviadas pelo próprio bot e eventos sem identificação
+    if key.get("fromMe") or not jid or not message_id:
+        return
+
+    # ignora evento repetido da Evolution
+    if await coord.is_duplicate(message_id):
+        return
+
+    # True só para quem deve iniciar o processamento deste usuário
+    if await coord.enqueue(jid, payload):
+        background_tasks.add_task(
+            coord.drain,
+            jid,
+            lambda p: handle_message_upsert(p, client),
+)
+
+
     
 
 async def handle_message_upsert(payload: dict, client):
@@ -94,6 +135,15 @@ async def handle_message_upsert(payload: dict, client):
                     await send_analysis_message(
                         number=remote_jid,
                         message_type=user_message_type,
+                        client=client
+                    )
+
+                    ai_analysis = await text_analisys(user_text_message)
+
+                    await send_text_message(
+                        instance_name=chatbot_instance_name,
+                        number=remote_jid,
+                        text=ai_analysis,
                         client=client
                     )
 

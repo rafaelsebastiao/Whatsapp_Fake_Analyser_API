@@ -8,6 +8,11 @@ from services.handlers.messages import  handle_message_upsert
 
 from settings.settings import Settings
 
+from dependencies.cordination import get_coordinator
+
+from services.handlers.messages import dispatch_message
+
+
 
 
 evolution_api_url = Settings().EVOLUTION_API_URL
@@ -23,12 +28,14 @@ router = APIRouter(
 async def webhook(
     request: Request,
     background_tasks: BackgroundTasks,
-    client = Depends(get_http_client)
-    ):
+    client = Depends(get_http_client),
+    coord =  Depends(get_coordinator)
+   ):
 
     payload = await request.json()
+
     event = payload.get("event")
 
     #Pegar a ultima conversa enviada e mandar uma mensagem de volta
     if event == "messages.upsert":
-        background_tasks.add_task(handle_message_upsert, payload, client)
+        await dispatch_message(payload, client, coord, background_tasks)
