@@ -1,5 +1,8 @@
 import json
 
+from functools import cache
+
+
 from httpx import AsyncClient, _exceptions
 
 from http import HTTPStatus
@@ -27,7 +30,36 @@ apikey = Settings().EVOLUTION_AUTHENTICATION_API_KEY
 chatbot_instance_name = Settings().CHATBOT_INSTANCE_NAME
 
 
+async def send_menu_options(
+    number:str,
+    client:AsyncClient   
+):
+    try:
+        response = await client.post(
+            url=f'{evolution_api_url}/message/sendButtons/{chatbot_instance_name}',
 
+            json={
+                "number":number,
+                "title": "🤖Fake Analyser Chatbot"
+            },
+            headers={
+                "apikey":apikey
+            },
+            
+            timeout=15
+             
+            )
+            
+    except _exceptions.ConnectError as errc:
+                        raise HTTPException(
+                            status_code=HTTPStatus.INTERNAL_SERVER_ERROR, 
+                            detail=f"Connection error: The Whatsapp's endpoint is inaccessible or down!\n"
+                            
+                        )
+            
+    verify_status_http(response)
+    return response.json()
+    
 
 # Método que envia para o usuário a mensagem padrão já definida pelo sistema.
 async def send_default_text_message(
@@ -137,6 +169,7 @@ def get_message_type(data: dict):
 
 
 # Método que lê o json de mensagens padrão que serão enviadas pelo bot
+@cache
 def get_default_message(user_name:str) -> str:
     with open(greetings_file_path, 'r', encoding='utf-8') as file:
         content = json.load(file)
@@ -145,7 +178,7 @@ def get_default_message(user_name:str) -> str:
     return message
 
 
-
+@cache
 def get_image_analysis_message():
     image_analisys_message:str = ''
 
@@ -155,6 +188,7 @@ def get_image_analysis_message():
 
     return image_analisys_message
 
+@cache
 def get_text_analysis_message():
     text_analisys_message:str = ''
     
@@ -164,7 +198,7 @@ def get_text_analysis_message():
     
     return text_analisys_message
 
-
+@cache
 def get_prohibited_message_type():
     prohibited_message_type :str = ''
     
