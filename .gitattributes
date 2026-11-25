@@ -1,0 +1,8 @@
+# Normaliza fim de linha: o repositório guarda LF; evita diffs falsos de CRLF vindos do Windows
+* text=auto eol=lf
+
+# Binários: nunca converter fim de linha
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
