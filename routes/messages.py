@@ -4,19 +4,12 @@ from fastapi.requests import Request
 
 from dependencies.http import get_http_client
 
-from services.handlers.messages import  handle_message_upsert
-
-from settings.settings import Settings
-
 from dependencies.cordination import get_coordinator
+
+from dependencies.conversation import get_conversation_store
 
 from services.handlers.messages import dispatch_message
 
-
-
-
-evolution_api_url = Settings().EVOLUTION_API_URL
-apikey = Settings().EVOLUTION_AUTHENTICATION_API_KEY
 
 router = APIRouter(
     prefix='/messages',
@@ -29,13 +22,14 @@ async def webhook(
     request: Request,
     background_tasks: BackgroundTasks,
     client = Depends(get_http_client),
-    coord =  Depends(get_coordinator)
+    coord =  Depends(get_coordinator),
+    store = Depends(get_conversation_store)
    ):
 
     payload = await request.json()
 
     event = payload.get("event")
 
-    #Pegar a ultima conversa enviada e mandar uma mensagem de volta
+    # Mensagem nova recebida: enfileira para a máquina de estados da conversa
     if event == "messages.upsert":
-        await dispatch_message(payload, client, coord, background_tasks)
+        await dispatch_message(payload, client, coord, store, background_tasks)
