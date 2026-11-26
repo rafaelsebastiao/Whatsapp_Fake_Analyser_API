@@ -51,9 +51,29 @@ EVOLUTION_AUTHENTICATION_API_KEY=<a mesma chave da Evolution>
 
 # Nome da instância que será criada na evolution por esta api (Nome do chatbot)
 CHATBOT_INSTANCE_NAME="fake-analyser-chatbot"
+
+# Chave do Google Gemini (análise da notícia)
+GEMINI_API_KEY=<sua chave do Gemini>
+
+# Chave da Brave Search API (busca de notícias atuais), em https://api-dashboard.search.brave.com
+BRAVE_SEARCH_API_KEY=<sua chave da Brave>
+
+# Opcional: modelos do Gemini em ordem de preferência. Se um estiver sobrecarregado
+# (503) ou demorar mais de 20 s, a API tenta o próximo da lista.
+# GEMINI_MODELS=gemini-3.6-flash,gemini-flash-latest,gemini-3.5-flash-lite
+# GEMINI_QUERY_MODELS=gemini-3.5-flash-lite,gemini-flash-latest
 ```
 
 Rodando a API **fora** do Docker (direto no PC), use `http://localhost:8000` e `http://localhost:8080` nas duas primeiras variáveis.
+
+### Como a notícia é analisada
+
+1. O Gemini transforma a mensagem do usuário numa consulta curta de busca (`prompts/search_query.json`). Se falhar, usa as primeiras palavras da notícia.
+2. A Brave Search (`web/search`, Brasil, pt-br) devolve até 8 resultados atuais (`services/search/brave.py`).
+3. O Gemini recebe a data de hoje, a notícia e os resultados numerados, e dá o veredito citando as fontes com `[n]` (`prompts/prompt.json`).
+4. A API anexa os links das fontes citadas, tirados dos resultados reais da Brave (`services/analysis/news.py`).
+
+Se a Brave falhar, a análise continua só com o Gemini, sem a lista de fontes.
 
 ## 3. Subir
 
