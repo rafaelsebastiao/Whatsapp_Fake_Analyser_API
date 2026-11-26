@@ -10,6 +10,7 @@ os.environ["EVOLUTION_API_URL"] = "http://evolution-api.test:8080"
 os.environ["EVOLUTION_AUTHENTICATION_API_KEY"] = "test-evolution-key"
 os.environ["CHATBOT_INSTANCE_NAME"] = "test-instance"
 os.environ["GEMINI_API_KEY"] = "test-gemini-key"
+os.environ["BRAVE_SEARCH_API_KEY"] = "test-brave-key"
 
 
 # Testes async rodam com o plugin do anyio (já instalado com o FastAPI), só no asyncio
