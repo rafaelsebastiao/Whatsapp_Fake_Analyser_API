@@ -1,6 +1,6 @@
 from httpx import AsyncClient
 
-from services.ai.genai import text_analisys
+from services.analysis.news import analyse_news
 
 from services.conversation.state import ConversationState, MemoryConversationStore
 
@@ -77,7 +77,8 @@ async def handle_awaiting_news(
         case MessageType.TEXT:
             await send(jid, get_template("text_analysis_message"), client)
 
-            analysis = await text_analisys(parsed.text)
+            # Busca na web (Brave) antes de o Gemini dar o veredito
+            analysis = await analyse_news(parsed.text, client)
 
             if analysis is None:
                 # Continua aguardando e reinicia os 10 minutos para o usuário reenviar

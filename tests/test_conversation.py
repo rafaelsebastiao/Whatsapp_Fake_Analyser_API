@@ -29,7 +29,7 @@ class FakeGemini:
         self.result: str | None = "Resultado: a notícia é FALSA."
         self.calls: list[str] = []
 
-    async def __call__(self, notice: str) -> str | None:
+    async def __call__(self, notice: str, client) -> str | None:
         self.calls.append(notice)
         return self.result
 
@@ -50,7 +50,7 @@ def sent(monkeypatch):
 @pytest.fixture
 def gemini(monkeypatch):
     fake = FakeGemini()
-    monkeypatch.setattr(conversation, "text_analisys", fake)
+    monkeypatch.setattr(conversation, "analyse_news", fake)
     return fake
 
 
