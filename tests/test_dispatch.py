@@ -44,12 +44,12 @@ def sent(monkeypatch):
         messages.append((number, text))
         return {}
 
-    async def fake_gemini(notice):
+    async def fake_analyse_news(notice, client):
         return "Análise do Gemini"
 
-    # Nenhuma chamada real à Evolution ou ao Gemini
+    # Nenhuma chamada real à Evolution, à Brave ou ao Gemini
     monkeypatch.setattr(conversation, "send_text_message", fake_send_text_message)
-    monkeypatch.setattr(conversation, "text_analisys", fake_gemini)
+    monkeypatch.setattr(conversation, "analyse_news", fake_analyse_news)
     return messages
 
 
